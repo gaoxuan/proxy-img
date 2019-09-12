@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proxy Image</title>
+    <script>
+        let requestImage = function (url, element) {
+            let request = new XMLHttpRequest();
+            request.responseType = 'blob';
+            request.open('get', url, true);
+            request.setRequestHeader('Authorization', 'your auth token');
+            request.onreadystatechange = e => {
+                if (request.readyState == XMLHttpRequest.DONE && request.status == 200) {
+                    element.src = URL.createObjectURL(request.response);
+                    element.onload = () => {
+                        URL.revokeObjectURL(element.src);
+                    }
+                }
+            };
+            request.send(null);
+        }
+
+
+        class AuthImg extends HTMLImageElement {
+            constructor() {
+                super();
+                this._lastUrl = '';
+            }
+
+            static get observedAttributes() {
+                return ['authSrc'];
+            }
+
+            connectedCallback() {
+                let url = this.getAttribute('authSrc');
+                console.log(this._lastUrl)
+                if (url !== this._lastUrl) {
+                    this._lastUrl = url;
+                    requestImage(url, this);
+                }
+                console.log('connectedCallback() is called.');
+            }
+        }
+
+        window.customElements.define('auth-img', AuthImg, {extends: 'img'});
+    </script>
+</head>
+<body>
+<img width="100" height="100" id="img" authsrc="http://39.106.118.122/images/image_201909111450326.jpg">
+</body>
+</html>
